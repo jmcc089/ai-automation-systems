@@ -147,15 +147,19 @@ source.
 | | staff email | client email | dashboard |
 |---|---|---|---|
 | **Holt & Vargas** | escaped | escaped | `esc()` at 43 interpolations |
-| **Brasa Commerce** | escaped | escaped | `esc()` at 11 |
-| **Cedar Healthcare** | **not escaped — open** | not escaped | `esc()` at 46, fixed `47dfe53` |
+| **Brasa Commerce** | escaped | escaped (incl. checkout, `266794f`) | `esc()` at 11 |
+| **Cedar Healthcare** | escaped (`266794f`) | escaped (`266794f`) | `esc()` at 46, fixed `47dfe53` |
 
-Holt is the only one of the three that escapes in every place a stranger's text is rendered. Cedar's
-dashboard was fixed after its stored-XSS finding and its **emails were not**; a live re-probe on
-2026-08-11 delivered `<img src=x onerror=…>` and a link to an attacker domain as working HTML in a
-Cedar-branded email to a clinician. Brasa passes on the path that was probed, and has one email node
-— `Build Confirmation Email`, on the unauthenticated checkout path — with no escaping and no probe
-against it yet.
+All three now escape in every place a stranger's text is rendered in a body. Cedar's dashboard was
+fixed after its stored-XSS finding (`47dfe53`) and its **emails were not** until 2026-08-11: a live
+probe that day first delivered `<img src=x onerror=…>` and a link to an attacker domain as working
+HTML in a Cedar-branded email to a clinician, and a re-probe after `266794f` delivered the same
+payloads as inert entities. Brasa's checkout confirmation — `Build Confirmation Email`, on the
+unauthenticated checkout path — was the last node without `esc()`; it was fixed and then probed with
+a real order in the same pass.
+
+What is still raw everywhere, by design, is the **subject line**: all three interpolate the name into
+it, and a mail subject is plain text with nothing to execute.
 
 Holt's own limit is unchanged and is the subject line, not the body: `Build Paralegal Email`
 interpolates `full_name` into the subject raw. Subjects are plain text, so there is nothing to
