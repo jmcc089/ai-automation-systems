@@ -381,10 +381,15 @@
 
   /* ---------- LOAD ---------- */
 
+  /* Cada embed que tiene más de un foreign key hacia la misma tabla debe nombrar el
+     constraint, o PostgREST responde 300 / PGRST201 y la carga entera falla — no solo
+     ese embed. hvl_document_reviews llega a hvl_cases por dos caminos:
+     hvl_document_reviews_case_id_fkey (case_id) y el guard compuesto
+     hvl_reviews_client_must_own_case (case_id, client_id). Queremos el primero. */
   const CASE_SELECT = [
     '*',
     'hvl_clients(*)',
-    'hvl_document_reviews(*)',
+    'hvl_document_reviews!hvl_document_reviews_case_id_fkey(*)',
     'hvl_case_notes(*)',
     'attorney:hvl_attorneys!hvl_cases_attorney_id_fkey(id,full_name)',
     'paralegal:hvl_attorneys!hvl_cases_paralegal_id_fkey(id,full_name)'
