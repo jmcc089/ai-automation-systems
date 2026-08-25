@@ -240,7 +240,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ customer_id: $json.customer_id, raw_message: $json.raw_message, intent: $json.intent, draft_reply: $json.draft_reply, confidence: $json.confidence, escalate_flag: $json.escalate_flag, context_used: $json.context_used, order_number: $json.order_number, source_event_id: $('Set Fields').first().json.source_event_id || null, agent_id: '37785583-2818-46dc-aa45-49e06101f603', status: ($json.escalate_flag ? 'draft' : 'approved') }) }}",
+        "jsonBody": "={{ JSON.stringify({ customer_id: $json.customer_id, raw_message: $json.raw_message, intent: $json.intent, draft_reply: $json.draft_reply, confidence: $json.confidence, escalate_flag: $json.escalate_flag, escalate_reasons: $json.escalate_reasons, context_used: $json.context_used, order_number: $json.order_number, source_event_id: $('Set Fields').first().json.source_event_id || null, agent_id: '37785583-2818-46dc-aa45-49e06101f603', status: ($json.escalate_flag ? 'draft' : 'approved') }) }}",
         "options": {
           "timeout": 10000
         }
@@ -2073,7 +2073,7 @@
     "availableInMCP": true,
     "errorWorkflow": "1Ta9kHrR2dk8akKd"
   },
-  "versionId": "31a49a20-420f-4b9c-83e7-faa7cfe7c578",
+  "versionId": "c028078b-743e-4d20-a583-3992f1353891",
   "meta": {
     "aiBuilderAssisted": true,
     "builderVariant": "mcp",
