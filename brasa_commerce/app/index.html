@@ -464,7 +464,10 @@ function renderList() {
 function selectTicket(id) {
   selectedId = id;
   const ticket = tickets.find(t => t.id === id);
-  editedReply  = ticket?.draft_reply || '';
+  // `final_reply` gana sobre `draft_reply`: lo escribe Claim Ticket cuando un
+  // agente aprueba, así que es lo que de verdad se envió. Mostrar el borrador
+  // del modelo en un ticket que un humano editó oculta el trabajo del humano.
+  editedReply  = ticket?.final_reply || ticket?.draft_reply || '';
   renderList();
   renderDetail(ticket);
 }
@@ -484,15 +487,46 @@ async function renderDetail(ticket) {
     notes = await sb(`bc_ticket_notes?ticket_id=eq.${ticket.id}&order=created_at.asc`);
   } catch(e) {}
 
+  // Cuál de las nueve condiciones disparó. `Parse DeepSeek Response` lo calcula
+  // en cada corrida; hasta que la columna existió no se guardaba en ninguna
+  // parte, así que las filas viejas no lo tienen y eso se dice en vez de
+  // fingir que no hubo motivo.
+  const reasons = (ticket.escalate_reasons || '')
+    .split(',').map(r => r.trim()).filter(r => r && r !== 'none');
+  const reasonHtml = reasons.length
+    ? `<div style="margin-top:8px;font-weight:500;">Fired: ${reasons.map(r => `<code style="background:#fff;padding:1px 5px;border-radius:4px;">${esc(r)}</code>`).join(' ')}</div>`
+    : `<div style="margin-top:8px;font-weight:400;opacity:.8;">Which condition fired was not recorded for this ticket.</div>`;
+
   const escalateBanner = ticket.escalate_flag
-    ? `<div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;font-weight:600;color:#dc2626;">🚨 Escalation recommended — review carefully before responding</div>`
-    : `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 16px;margin-bottom:20px;font-size:13px;font-weight:600;color:#166534;">✅ Standard ticket — AI confidence sufficient</div>`;
+    ? `<div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;font-weight:600;color:#dc2626;">🚨 Held for a human — this reply was never sent automatically${reasonHtml}</div>`
+    : `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 16px;margin-bottom:20px;font-size:13px;font-weight:600;color:#166534;">✅ No escalation condition fired — this ticket was eligible for auto-send</div>`;
 
   const notesHtml = notes.length
     ? notes.map(n => `<div class="note-item"><div class="note-text">${esc(n.note)}</div><div class="note-by">${new Date(n.created_at).toLocaleString()} · ${n.note_type}</div></div>`).join('')
     : '<div style="font-size:13px;color:var(--muted);padding:8px 0;">No notes yet.</div>';
 
-  const isClosed = ticket.status === 'sent' || ticket.status === 'escalated';
+  // Solo `sent` cierra un ticket. Un `escalated` es precisamente uno que un
+  // humano todavía tiene que contestar, y el workflow ya lo permite: Claim
+  // Ticket acepta `status=in.(draft,escalated)`. Bloquearlo aquí contradecía al
+  // backend y dejaba los escalados sin ninguna forma de responder.
+  const isClosed = ticket.status === 'sent';
+
+  // Un borrador vacío no es un fallo del panel: las rutas `model_unavailable` y
+  // `no_substance` lo dejan vacío a propósito para que no pueda auto-enviarse.
+  const noDraft = !(ticket.draft_reply || '').trim() && !(ticket.final_reply || '').trim();
+  const noDraftNotice = noDraft
+    ? `<div style="background:#fffbeb;border:1px solid #fcd34d;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12.5px;color:#92400E;">The model produced no draft for this ticket — by design, so nothing could be sent automatically. Write the reply below.</div>`
+    : '';
+
+  // Qué se muestra en la caja, y con qué nombre. `final_reply` solo existe
+  // cuando un agente aprobó; en un auto-enviado el borrador ES lo que se envió.
+  const replyLabel = ticket.final_reply
+    ? 'Reply sent to the customer — edited by an agent'
+    : ticket.status === 'sent'
+      ? 'Reply sent to the customer — the model draft, unedited'
+      : noDraft
+        ? 'No draft — write the reply'
+        : 'Model draft — edit before approving';
 
   main.innerHTML = `
     <div class="detail-header">
@@ -530,18 +564,20 @@ async function renderDetail(ticket) {
       <div class="section-label">Customer message</div>
       <div class="msg-box">${esc(ticket.raw_message || '')}</div>
 
-      <div class="section-label">AI confidence</div>
+      <div class="section-label">Model self-reported confidence</div>
       <div class="conf-block">
         <div class="conf-row">
           <div class="conf-bar-wrap"><div class="conf-fill" style="width:${pct}%;background:${confColor}"></div></div>
           <span class="conf-num" style="color:${confColor}">${pct}%</span>
         </div>
-        ${ticket.context_used && ticket.context_used !== 'None' ? `<div class="conf-context"><strong>Context:</strong> ${esc(ticket.context_used)}</div>` : ''}
+        <div style="font-size:11.5px;color:var(--muted);margin-top:6px;">The model's own estimate, not a measure of accuracy — it has returned 0.98 on a message containing nothing. Escalation does not rely on it alone.</div>
+        ${ticket.context_used && ticket.context_used !== 'None' ? `<div class="conf-context"><strong>Retrieved context:</strong> ${esc(ticket.context_used)}</div>` : ''}
       </div>
 
-      <div class="section-label">AI drafted reply — edit before approving</div>
+      <div class="section-label">${replyLabel}</div>
       <div class="reply-block">
-        <textarea id="reply-ta" ${isClosed ? 'disabled' : ''}>${esc(editedReply)}</textarea>
+        ${noDraftNotice}
+        <textarea id="reply-ta" ${isClosed ? 'disabled' : ''} placeholder="${noDraft ? 'Write the reply to the customer…' : ''}">${esc(editedReply)}</textarea>
         <div class="reply-meta" id="reply-meta"></div>
       </div>
 

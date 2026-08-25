@@ -46,8 +46,16 @@ classification of that message still varies while the escalation no longer does.
 The model may also raise `escalate_flag` itself. That signal is kept because it can only ever *add*
 caution: the condition is a disjunction, so a `false` from the model has never suppressed anything.
 
-Which condition fired is recorded in `escalate_reasons` on the node output, so an escalation can be
-explained after the fact rather than guessed at.
+Which condition fired is recorded in `escalate_reasons`, so an escalation can be explained after the
+fact rather than guessed at.
+
+**Until 2026-08-25 that sentence was only half true, and the half that was missing is the half that
+matters.** `Parse DeepSeek Response` computed `escalate_reasons` on every run, but `Insert Ticket`
+never wrote it and the column did not exist, so the reason lived only in n8n's execution record —
+which is pruned. An agent opening the queue saw that a ticket had been held and had no way to learn
+why. The column now exists, `Insert Ticket` writes it, and the dashboard renders it in the
+escalation banner. The 142 tickets written before that date carry `NULL`, and the dashboard says so
+rather than implying no condition fired.
 
 **Verified.** Execution `317`: the model returned `escalate_flag: false` at 0.98 confidence and the
 system escalated anyway on `risk_terms` alone, routing to the team. That is the property this section
