@@ -240,6 +240,14 @@ where nothing may be emailed, which is what the guard is for, but the caller can
 `status` moves in two phases. `approved` means a reply was decided and written. `sent` means Resend
 accepted the message. Nothing writes `sent` before the send is attempted.
 
+A fifth value, `closed`, was added on 2026-08-25 for a ticket an agent resolved **without emailing**
+— spam, a duplicate, something already handled by other means. It exists because the only terminal
+state was `sent`, and marking an unanswered ticket `sent` would assert a delivery that never
+happened, which is the one thing this section prohibits. Before it, the only way to clear junk from
+the queue was to reply to it. `closed` is written by the panel and by nothing else; `Claim Ticket`
+claims `status=in.(draft,escalated)`, so a closed ticket is outside the approval path without any
+change to the workflow.
+
 This applies to both paths that email a customer: `Insert Ticket` → `Mark Intake Sent` on the
 auto-send path, and `Claim Ticket` → `Mark Ticket Sent` on the approval path. A ticket sitting at
 `approved` is a reply that exists and did not go out, and it is visible as such in the queue.
@@ -266,7 +274,12 @@ on this field.
 - **Any signed-in agent can act on any ticket.** There is no per-agent scoping on
   `bc_support_tickets`.
 - **A ticket whose send failed is not retried.** It sits at `approved` and re-approving is refused by
-  §6. Visible, but it needs a human. Automatic retry was not built because a retry that cannot tell a
-  refused send from a delivered one would re-email customers.
+  §6. Automatic retry was not built because a retry that cannot tell a refused send from a delivered
+  one would re-email customers. Since 2026-08-25 the panel states this in place rather than leaving
+  the agent to discover it: the ticket reads *Email not sent*, has its own counter, and its approve
+  button is disabled with the reason, instead of offering a button the backend would refuse. The
+  agent's remaining moves are to reply out of band or to close it.
+- **Nothing reconciles `approved` tickets automatically.** The 26 left by the 2026-08-07 quota
+  exhaustion are cleared by hand, one `closed` at a time.
 
-*Last verified 2026-08-07.*
+*Last verified 2026-08-25.*

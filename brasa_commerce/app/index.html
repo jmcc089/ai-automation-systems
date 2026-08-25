@@ -101,11 +101,15 @@
   .b-other   { background: #F9FAFB; color: #6B7280; }
   .b-esc     { background: #FEF2F2; color: #DC2626; font-size: 9px; padding: 2px 6px; }
 
-  /* Status badges */
+  /* Status badges.
+     `approved` era verde y con un ✓ hasta hoy. Es el estado de un ticket cuyo
+     correo nunca se marcó enviado — 26 de ellos quedaron así el 2026-08-07,
+     cuando se agotó la cuota de Resend. Pintarlo como éxito los escondía. */
   .b-draft    { background: #FFF7F4; color: var(--terra); border: 1px solid #FDDDD0; }
-  .b-approved { background: #ECFDF5; color: #059669; }
+  .b-approved { background: #FEF2F2; color: #B91C1C; border: 1px solid #FCA5A5; }
   .b-escalated{ background: #FEF2F2; color: #DC2626; }
   .b-sent     { background: #F0FDF4; color: #166534; }
+  .b-closed   { background: #F3F4F6; color: #4B5563; }
 
   /* ── MAIN DETAIL ── */
   .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: #F9FAFB; }
@@ -206,6 +210,104 @@
   .cust-row span:first-child { color: var(--muted); }
   .cust-row span:last-child { font-weight: 500; color: var(--charcoal); }
 
+  /* ── ORDERS OF THIS CUSTOMER ──
+     Se piden por `customer_id` al abrir un ticket: el `order_number` solo está
+     en 4 de los 22 tickets de tipo `order_status`, pero 37 tickets son de gente
+     que sí tiene pedidos. La razón está en loadOrders(). */
+  .orders-block { margin-bottom: 20px; }
+  .order-card {
+    background: var(--white); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 18px; margin-bottom: 10px;
+  }
+  .order-card.cited { border-color: var(--terra); box-shadow: 0 0 0 3px var(--terra-light); }
+  .order-head { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
+  .order-num { font-family: monospace; font-size: 13px; font-weight: 700; color: var(--charcoal); }
+  .order-when { font-size: 11.5px; color: var(--muted); }
+  .order-total { margin-left: auto; font-family: 'Fraunces', Georgia, serif; font-size: 16px; }
+  .cited-tag {
+    background: var(--terra); color: var(--white); font-size: 9px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.4px; padding: 2px 7px; border-radius: 99px;
+  }
+  .ship-pill {
+    display: inline-block; padding: 2px 9px; border-radius: 99px;
+    font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px;
+  }
+  .s-preparing  { background: #FFFBEB; color: #B45309; }
+  .s-shipped    { background: #EFF6FF; color: #1D4ED8; }
+  .s-in_transit { background: #EEF2FF; color: #4338CA; }
+  .s-delivered  { background: #F0FDF4; color: #166534; }
+  .order-line { display: flex; justify-content: space-between; font-size: 12.5px; padding: 3px 0; color: #374151; }
+  .order-line span:last-child { color: var(--muted); white-space: nowrap; padding-left: 12px; }
+  .order-ship { font-size: 12px; color: var(--muted); margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); line-height: 1.6; }
+  .order-ship code { background: #F3F4F6; padding: 1px 6px; border-radius: 4px; font-size: 11.5px; }
+  .block-empty {
+    background: var(--white); border: 1px dashed var(--border); border-radius: 8px;
+    padding: 14px 18px; font-size: 12.5px; color: var(--muted); margin-bottom: 20px;
+  }
+
+  /* ── OTHER MESSAGES FROM THIS CUSTOMER ──
+     Se filtra el array que ya está en memoria. Cero consultas nuevas. */
+  .history-block { background: var(--white); border: 1px solid var(--border); border-radius: 8px; padding: 8px 18px; margin-bottom: 20px; }
+  .history-item { padding: 10px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .history-item:last-child { border-bottom: none; }
+  .history-item:hover .history-msg { color: var(--terra); }
+  .history-top { display: flex; align-items: center; gap: 7px; margin-bottom: 3px; flex-wrap: wrap; }
+  .history-when { font-size: 11px; color: var(--muted); margin-left: auto; }
+  .history-msg { font-size: 12.5px; color: #374151; line-height: 1.5; transition: color 0.15s; }
+
+  /* ── SAVED REPLIES ──
+     19 de los 56 tickets en cola llegan sin borrador: las rutas
+     `model_unavailable` y `no_substance` lo dejan vacío a propósito. */
+  .tpl-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .tpl-btn {
+    padding: 4px 11px; border-radius: 99px; font-size: 11px; font-weight: 500;
+    border: 1px solid var(--border); cursor: pointer; background: #FAFAFA; color: #4B5563;
+    font-family: 'Archivo', sans-serif; transition: all 0.15s;
+  }
+  .tpl-btn:hover { border-color: var(--terra); color: var(--terra); background: var(--terra-light); }
+  .recipient-line { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .recipient-line strong { color: var(--charcoal); font-weight: 600; }
+  .recipient-line.unknown { color: #B91C1C; }
+
+  .btn-close-noreply {
+    flex: 1; padding: 12px; border-radius: 8px; background: var(--white);
+    color: var(--muted); border: 2px solid var(--border); font-size: 14px; font-weight: 600;
+    cursor: pointer; font-family: 'Archivo', sans-serif; transition: all 0.2s;
+  }
+  .btn-close-noreply:hover { border-color: var(--charcoal); color: var(--charcoal); }
+  .btn-close-noreply:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Edad en la lista: una cola de revisión humana sin antigüedad no se prioriza. */
+  .ti-age { font-size: 11px; color: var(--muted); }
+  .ti-age.stale { color: #B91C1C; font-weight: 600; }
+
+  /* Lo que el sistema hizo sin Jordan. La lista arranca filtrada en "Needs
+     review", así que los auto-enviados eran invisibles para él. */
+  .sysline {
+    padding: 9px 16px; background: #F0FDF4; border-bottom: 1px solid var(--border);
+    font-size: 11.5px; color: #166534; line-height: 1.5; flex-shrink: 0;
+  }
+  .sysline strong { font-weight: 700; }
+
+  /* ── CLOSE WITHOUT REPLYING ── */
+  .close-overlay { position: fixed; inset: 0; background: rgba(44,44,44,0.4); z-index: 9998; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .close-card { width: 100%; max-width: 360px; background: var(--white); border-radius: 12px; padding: 24px; box-shadow: 0 10px 40px rgba(44,44,44,0.18); }
+  .close-title { font-family: 'Fraunces', Georgia, serif; font-size: 18px; color: var(--charcoal); margin-bottom: 5px; }
+  .close-sub { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
+  .close-reason {
+    display: block; width: 100%; text-align: left; margin-bottom: 7px; padding: 11px 14px;
+    font-family: 'Archivo', sans-serif; font-size: 13px; color: var(--charcoal);
+    background: #FAFAFA; border: 1px solid var(--border); border-radius: 7px; cursor: pointer;
+    transition: all 0.15s;
+  }
+  .close-reason:hover { border-color: var(--terra); background: var(--terra-light); color: var(--terra); }
+  .close-cancel {
+    display: block; width: 100%; margin-top: 10px; padding: 9px;
+    font-family: 'Archivo', sans-serif; font-size: 13px; color: var(--muted);
+    background: none; border: none; cursor: pointer;
+  }
+  .close-cancel:hover { color: var(--charcoal); }
+
   /* ── TOAST ── */
   .toast {
     position: fixed; top: 20px; right: 20px; z-index: 9999;
@@ -285,12 +387,19 @@
     <div class="sidebar-stats">
       <div class="stat">
         <span class="stat-num" id="stat-draft" style="color:var(--terra)">—</span>
-        <span class="stat-lab">Draft</span>
+        <span class="stat-lab">To review</span>
       </div>
       <div class="stat-div"></div>
       <div class="stat">
         <span class="stat-num" id="stat-esc" style="color:#DC2626">—</span>
-        <span class="stat-lab">Escalated</span>
+        <span class="stat-lab">Flagged</span>
+      </div>
+      <div class="stat-div"></div>
+      <!-- Los tickets cuyo correo nunca salió. No tenían contador: vivían bajo
+           un badge verde que decía "approved" y nadie los buscaba. -->
+      <div class="stat">
+        <span class="stat-num" id="stat-failed" style="color:#B91C1C">—</span>
+        <span class="stat-lab">Not sent</span>
       </div>
       <div class="stat-div"></div>
       <div class="stat">
@@ -299,11 +408,15 @@
       </div>
     </div>
 
+    <!-- Lo que el modelo despachó sin intervención. -->
+    <div class="sysline" id="sysline" style="display:none"></div>
+
     <div class="sidebar-filters" id="status-filters">
-      <button class="filter-btn active" data-status="draft" onclick="setFilter('status','draft',this)">Draft</button>
-      <button class="filter-btn" data-status="escalated" onclick="setFilter('status','escalated',this)">Escalated</button>
-      <button class="filter-btn" data-status="approved" onclick="setFilter('status','approved',this)">Approved</button>
-      <button class="filter-btn" data-status="sent" onclick="setFilter('status','sent',this)">Sent</button>
+      <button class="filter-btn active" data-status="draft" onclick="setFilter('status','draft',this)">To review</button>
+      <button class="filter-btn" data-status="escalated" onclick="setFilter('status','escalated',this)">Flagged</button>
+      <button class="filter-btn" data-status="approved" onclick="setFilter('status','approved',this)">Not sent</button>
+      <button class="filter-btn" data-status="sent" onclick="setFilter('status','sent',this)">Answered</button>
+      <button class="filter-btn" data-status="closed" onclick="setFilter('status','closed',this)">Closed</button>
       <button class="filter-btn" data-status="all" onclick="setFilter('status','all',this)">All</button>
     </div>
 
@@ -359,6 +472,42 @@ let editedReply   = '';
 let filters       = { status: 'draft', intent: 'all' };
 let accessToken   = null;   // current JWT, refreshed via onAuthStateChange
 let currentAgent  = null;
+let orders        = [];     // pedidos del cliente del ticket abierto
+
+// Cómo se llama cada estado en pantalla. Los nombres de la base describen el
+// paso del workflow; lo que un agente necesita saber es qué le toca hacer.
+// `approved` es el caso que más importaba: significa que el correo nunca se
+// marcó enviado, y decía "Approved" en verde.
+const STATUS_LABELS = {
+  draft:     'To review',
+  escalated: 'Flagged',
+  approved:  'Email not sent',
+  sent:      'Answered',
+  closed:    'Closed, no reply'
+};
+
+// Motivos de cierre sin respuesta. El motivo se guarda como nota interna, así
+// que no hizo falta ninguna columna nueva.
+const CLOSE_REASONS = [
+  'Spam or not a real request',
+  'Duplicate of another ticket',
+  'Already handled another way',
+  'No reply needed'
+];
+
+// Respuestas guardadas. 19 de los 56 tickets en cola llegan sin borrador —
+// `model_unavailable` y `no_substance` lo dejan vacío a propósito para que
+// nada pueda auto-enviarse — y hasta ahora Jordan los escribía desde cero.
+const TEMPLATES = [
+  { label: 'Where is my order', body:
+    "Hi {name},\n\nThanks for reaching out. I've looked up your order and it's on its way — you'll find the current status and the carrier tracking number in the confirmation email we sent you.\n\nIf anything looks off, just reply here and I'll sort it out.\n\nBest,\nJordan\nBrasa Commerce" },
+  { label: 'Return / exchange', body:
+    "Hi {name},\n\nHappy to help with that. Our returns window is 30 days from delivery, no questions asked — the piece just needs to come back to us in a condition we can inspect.\n\nReply with your order number and I'll send you a prepaid return label.\n\nBest,\nJordan\nBrasa Commerce" },
+  { label: 'Cast iron care', body:
+    "Hi {name},\n\nGreat question. For our cast iron: wash by hand with hot water and a stiff brush, dry it on the stove over low heat, then wipe a very thin film of neutral oil over the cooking surface while it's still warm.\n\nSkip the dishwasher and long soaks. The seasoning gets better with use.\n\nBest,\nJordan\nBrasa Commerce" },
+  { label: 'Damaged on arrival', body:
+    "Hi {name},\n\nI'm sorry — that's not how this should have arrived, and we'll make it right.\n\nIf you can send a photo of the damage, I'll get a replacement out to you right away. No need to send the damaged piece back first.\n\nBest,\nJordan\nBrasa Commerce" }
+];
 
 // ── SUPABASE HELPER ───────────────────────────────────────────────────────────
 async function sb(path, options = {}) {
@@ -400,16 +549,82 @@ async function loadTickets() {
   }
 }
 
+// ── ORDERS OF THIS CUSTOMER ───────────────────────────────────────────────────
+// Se busca por `customer_id`, no por el `order_number` del ticket, porque el
+// número casi nunca está: de los 22 tickets `order_status` solo 4 lo traen
+// dentro del mensaje, mientras que 37 tickets pertenecen a alguien que sí tiene
+// pedidos en la base. Colgarse del número dejaba a Jordan sin pedido en la
+// mayoría de los casos en que hay uno.
+//
+// El `order_number` no se desperdicia: cuando está, marca cuál de los pedidos
+// menciona el mensaje. Lo escribe Insert Ticket desde lo que la búsqueda
+// encontró de verdad, no desde lo que el modelo dijo haber visto.
+//
+// Consulta aparte, no un embed colgado del ticket, para no traer 200 columnas
+// de pedido en cada carga de la lista. Probado contra PostgREST el 2026-08-25:
+// HTTP 200, embeds resueltos. (Un embed `bc_support_tickets->bc_orders` también
+// responde 200 — solo hay una FK directa entre las dos, así que no es de los
+// ambiguos que devuelven 300.)
+async function loadOrders(customerId) {
+  if (!customerId) return [];
+  const cols = 'order_number,created_at,status,subtotal,shipping,total,'
+             + 'ship_name,ship_line1,ship_line2,ship_city,ship_state,ship_postal_code,'
+             + 'bc_order_items(sku,product_name,qty,unit_price),'
+             + 'bc_shipments(status,carrier,tracking_number,eta_date,shipped_at,delivered_at)';
+  return await sb(`bc_orders?customer_id=eq.${customerId}&select=${cols}&order=created_at.desc`);
+}
+
 // ── STATS ─────────────────────────────────────────────────────────────────────
 function updateStats() {
   const draft    = tickets.filter(t => t.status === 'draft').length;
   const esc      = tickets.filter(t => t.status === 'escalated').length;
+  // `approved` es un estado de paso: Claim Ticket lo escribe y Mark Ticket Sent
+  // lo mueve a `sent`. Un ticket que se quedó ahí es uno cuyo correo no salió.
+  const failed   = tickets.filter(t => t.status === 'approved').length;
   document.getElementById('stat-draft').textContent  = draft;
   document.getElementById('stat-esc').textContent    = esc;
+  document.getElementById('stat-failed').textContent = failed;
   document.getElementById('stat-total').textContent  = tickets.length;
+
   const escBadge = document.getElementById('esc-count');
-  if (esc > 0) { escBadge.textContent = esc + ' needs review'; escBadge.style.display = ''; }
+  const pending  = draft + esc;
+  if (pending > 0) { escBadge.textContent = pending + ' waiting on you'; escBadge.style.display = ''; }
   else { escBadge.style.display = 'none'; }
+
+  // Un auto-enviado es un ticket `sent` que ningún agente editó: `final_reply`
+  // solo lo escribe Claim Ticket cuando alguien aprueba. Sin esto los 59
+  // auto-enviados eran invisibles, porque la lista abre filtrada en "To review".
+  const auto = tickets.filter(t => t.status === 'sent' && !t.final_reply);
+  const today = auto.filter(t => isToday(t.created_at)).length;
+  const line = document.getElementById('sysline');
+  if (auto.length) {
+    line.innerHTML = `The model answered <strong>${auto.length}</strong> on its own`
+      + (today ? `, <strong>${today}</strong> of them today` : '')
+      + ` — no agent involved. <span style="opacity:.75;">See them under “Answered”.</span>`;
+    line.style.display = '';
+  } else {
+    line.style.display = 'none';
+  }
+}
+
+function isToday(iso) {
+  const d = new Date(iso), n = new Date();
+  return d.getDate() === n.getDate() && d.getMonth() === n.getMonth() && d.getFullYear() === n.getFullYear();
+}
+
+// Cuánto lleva esperando. `stale` a partir de 24 h y solo en lo que sigue
+// abierto — un ticket contestado hace un mes no es un problema.
+function ageLabel(iso) {
+  const mins = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 60000));
+  if (mins < 60)   return { text: mins + 'm', hours: 0 };
+  const hours = Math.floor(mins / 60);
+  if (hours < 24)  return { text: hours + 'h', hours };
+  const days = Math.floor(hours / 24);
+  return { text: days + 'd', hours };
+}
+
+function statusBadgeHtml(status) {
+  return `<span class="badge b-${status}">${esc(STATUS_LABELS[status] || status)}</span>`;
 }
 
 // ── FILTERS ───────────────────────────────────────────────────────────────────
@@ -441,20 +656,23 @@ function renderList() {
   container.innerHTML = list.map(t => {
     const c   = customers[t.customer_id] || {};
     const name = c.full_name || 'Unknown';
-    const dt   = new Date(t.created_at);
-    const time = dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    const date = dt.toLocaleDateString([], { month: 'short', day: 'numeric' });
     const preview = (t.raw_message || '').slice(0, 72) + ((t.raw_message || '').length > 72 ? '…' : '');
     const intentBadge = intentBadgeHtml(t.intent);
     const escTag = t.escalate_flag && t.status === 'draft' ? `<span class="badge b-esc">⚑ ESC</span>` : '';
+
+    // Lo que se pinta es la edad, no la hora de llegada: en una cola de revisión
+    // "hace 4 d" es accionable y "Aug 21, 14:03" hay que restarlo mentalmente.
+    const age  = ageLabel(t.created_at);
+    const open = t.status === 'draft' || t.status === 'escalated' || t.status === 'approved';
+    const ageCls = open && age.hours >= 24 ? 'ti-age stale' : 'ti-age';
 
     return `<div class="ticket-item ${selectedId === t.id ? 'active' : ''}" onclick="selectTicket('${t.id}')">
       <div class="ti-row1">
         <span class="ti-name">${esc(name)}</span>
         ${escTag}
-        <span class="ti-time">${date} ${time}</span>
+        <span class="ti-time"><span class="${ageCls}" title="${new Date(t.created_at).toLocaleString()}">${age.text}</span></span>
       </div>
-      <div class="ti-row2">${intentBadge} <span class="badge b-${t.status}">${t.status}</span></div>
+      <div class="ti-row2">${intentBadge} ${statusBadgeHtml(t.status)}</div>
       <div class="ti-preview">${esc(preview)}</div>
     </div>`;
   }).join('');
@@ -487,6 +705,16 @@ async function renderDetail(ticket) {
     notes = await sb(`bc_ticket_notes?ticket_id=eq.${ticket.id}&order=created_at.asc`);
   } catch(e) {}
 
+  // Los pedidos de este cliente. Un fallo aquí no puede tumbar el resto del
+  // detalle: se distingue "no tiene pedidos" de "no pudimos consultarlos",
+  // porque decir lo primero cuando pasó lo segundo manda a Jordan a contestar
+  // que no hay pedido cuando sí lo hay.
+  let ordersFailed = false;
+  orders = [];
+  try {
+    orders = await loadOrders(ticket.customer_id) || [];
+  } catch (e) { ordersFailed = true; }
+
   // Cuál de las nueve condiciones disparó. `Parse DeepSeek Response` lo calcula
   // en cada corrida; hasta que la columna existió no se guardaba en ninguna
   // parte, así que las filas viejas no lo tienen y eso se dice en vez de
@@ -497,6 +725,35 @@ async function renderDetail(ticket) {
     ? `<div style="margin-top:8px;font-weight:500;">Fired: ${reasons.map(r => `<code style="background:#fff;padding:1px 5px;border-radius:4px;">${esc(r)}</code>`).join(' ')}</div>`
     : `<div style="margin-top:8px;font-weight:400;opacity:.8;">Which condition fired was not recorded for this ticket.</div>`;
 
+  // Qué puede hacerse con este ticket.
+  //
+  // Un `escalated` es precisamente uno que un humano todavía tiene que
+  // contestar, y el workflow ya lo permite: Claim Ticket acepta
+  // `status=in.(draft,escalated)`. Bloquearlo contradecía al backend y dejaba
+  // los escalados sin ninguna forma de responder.
+  //
+  // `approved` tampoco se puede aprobar: Claim Ticket no lo reclamaría y el
+  // agente recibiría un "nothing was sent" sin explicación. Se bloquea aquí y
+  // se le dice por qué, en vez de dejarlo pulsar un botón que no puede ganar.
+  const isClosed   = ticket.status === 'sent' || ticket.status === 'closed';
+  const canApprove = ticket.status === 'draft' || ticket.status === 'escalated';
+  const sendFailed = ticket.status === 'approved';
+
+  // `approved` significa que Claim Ticket reclamó la fila y Mark Ticket Sent
+  // nunca la movió a `sent`: el correo no salió. Re-aprobar está prohibido a
+  // propósito (§6 de DECISIONS.md) porque un reintento no puede distinguir un
+  // envío rechazado de uno entregado, y re-enviaría a clientes. La salida es
+  // cerrarlo o escribirle al cliente por fuera.
+  const sendFailedBanner = sendFailed
+    ? `<div style="background:#FEF2F2;border:1px solid #FCA5A5;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;color:#B91C1C;">
+         <strong>The email never went out.</strong>
+         <div style="margin-top:6px;font-weight:400;line-height:1.6;">
+           This ticket was approved but never marked as sent. Approving again is blocked on purpose — a retry cannot tell a rejected send from a delivered one, so it could email the customer twice.
+           Reply outside the system if it still matters, then close it below.
+         </div>
+       </div>`
+    : '';
+
   const escalateBanner = ticket.escalate_flag
     ? `<div style="background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:12px 16px;margin-bottom:20px;font-size:13px;font-weight:600;color:#dc2626;">🚨 Held for a human — this reply was never sent automatically${reasonHtml}</div>`
     : `<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 16px;margin-bottom:20px;font-size:13px;font-weight:600;color:#166534;">✅ No escalation condition fired — this ticket was eligible for auto-send</div>`;
@@ -504,12 +761,6 @@ async function renderDetail(ticket) {
   const notesHtml = notes.length
     ? notes.map(n => `<div class="note-item"><div class="note-text">${esc(n.note)}</div><div class="note-by">${new Date(n.created_at).toLocaleString()} · ${n.note_type}</div></div>`).join('')
     : '<div style="font-size:13px;color:var(--muted);padding:8px 0;">No notes yet.</div>';
-
-  // Solo `sent` cierra un ticket. Un `escalated` es precisamente uno que un
-  // humano todavía tiene que contestar, y el workflow ya lo permite: Claim
-  // Ticket acepta `status=in.(draft,escalated)`. Bloquearlo aquí contradecía al
-  // backend y dejaba los escalados sin ninguna forma de responder.
-  const isClosed = ticket.status === 'sent';
 
   // Un borrador vacío no es un fallo del panel: las rutas `model_unavailable` y
   // `no_substance` lo dejan vacío a propósito para que no pueda auto-enviarse.
@@ -528,6 +779,20 @@ async function renderDetail(ticket) {
         ? 'No draft — write the reply'
         : 'Model draft — edit before approving';
 
+  // A quién le va a llegar. El destinatario NO sale de aquí — Gate Approval lo
+  // lee del ticket reclamado, precisamente porque el webhook es público y hasta
+  // el 2026-08-07 enviaba a la dirección que trajera la petición. Esto solo le
+  // enseña a Jordan la misma dirección que n8n va a usar, para que no apruebe a
+  // ciegas. Si el cliente no tiene correo, el envío no ocurrirá y se dice.
+  const recipientLine = c.email
+    ? `<div class="recipient-line">Goes to <strong>${esc(c.email)}</strong></div>`
+    : `<div class="recipient-line unknown">This customer has no email on file — approving will not send anything.</div>`;
+
+  const templateBar = `
+    <div class="tpl-bar">
+      ${TEMPLATES.map((t, i) => `<button class="tpl-btn" onclick="useTemplate(${i})">${esc(t.label)}</button>`).join('')}
+    </div>`;
+
   main.innerHTML = `
     <div class="detail-header">
       <div class="dh-row1">
@@ -543,26 +808,37 @@ async function renderDetail(ticket) {
       </div>
       <div class="dh-row2">
         ${intentBadgeHtml(ticket.intent)}
-        <span class="badge b-${ticket.status}">${ticket.status}</span>
+        ${statusBadgeHtml(ticket.status)}
         ${ticket.escalate_flag ? '<span class="badge b-esc">⚑ Escalate</span>' : ''}
       </div>
     </div>
 
     <div class="detail-wrap">
+      ${sendFailedBanner}
       ${escalateBanner}
 
       <div class="section-label">Customer info</div>
       <div class="customer-block">
         <div class="cust-row"><span>Email</span><span>${esc(c.email || '—')}</span></div>
         <div class="cust-row"><span>Phone</span><span>${esc(c.phone || '—')}</span></div>
-        <!-- Sin `|| 1`: la base mantiene este contador con un trigger desde
-             2026-08-07, así que un 0 es un 0 de verdad. El fallback anterior
-             pintaba "1" para siete clientes que tenían el campo sin mantener. -->
+        <!-- Sin el fallback "|| 1": la base mantiene este contador con un
+             trigger desde 2026-08-07, así que un 0 es un 0 de verdad. El
+             fallback anterior pintaba 1 para siete clientes que tenían el
+             campo sin mantener.
+             OJO: este comentario vive dentro de un template literal. Un acento
+             grave aquí lo cierra a media frase y se lleva por delante todo el
+             resto del detalle — mensaje, respuesta y botones incluidos. Pasó
+             el 2026-08-25. Comillas rectas, nunca backticks. -->
         <div class="cust-row"><span>Total tickets</span><span>${c.total_tickets ?? '—'}</span></div>
       </div>
 
+      <div class="section-label">Orders${orders.length ? ` (${orders.length})` : ''}</div>
+      ${ordersHtml(orders, ticket.order_number, ordersFailed)}
+
       <div class="section-label">Customer message</div>
       <div class="msg-box">${esc(ticket.raw_message || '')}</div>
+
+      ${historyHtml(ticket)}
 
       <div class="section-label">Model self-reported confidence</div>
       <div class="conf-block">
@@ -577,7 +853,9 @@ async function renderDetail(ticket) {
       <div class="section-label">${replyLabel}</div>
       <div class="reply-block">
         ${noDraftNotice}
-        <textarea id="reply-ta" ${isClosed ? 'disabled' : ''} placeholder="${noDraft ? 'Write the reply to the customer…' : ''}">${esc(editedReply)}</textarea>
+        ${canApprove ? recipientLine : ''}
+        ${canApprove ? templateBar : ''}
+        <textarea id="reply-ta" ${isClosed || sendFailed ? 'disabled' : ''} placeholder="${noDraft ? 'Write the reply to the customer…' : ''}">${esc(editedReply)}</textarea>
         <div class="reply-meta" id="reply-meta"></div>
       </div>
 
@@ -592,11 +870,20 @@ async function renderDetail(ticket) {
     </div>
 
     <div class="action-bar">
-      <button class="btn-approve" onclick="approveTicket('${ticket.id}')" ${isClosed ? 'disabled' : ''}>
-        ${ticket.status === 'sent' ? '✓ Sent' : ticket.status === 'approved' ? '✓ Approved' : '✓ Approve'}
+      <button class="btn-approve" onclick="approveTicket('${ticket.id}')" ${canApprove ? '' : 'disabled'}>
+        ${ticket.status === 'sent' ? '✓ Answered'
+          : ticket.status === 'closed' ? 'Closed'
+          : sendFailed ? 'Cannot send again'
+          : '✓ Approve & send'}
       </button>
-      <button class="btn-escalate" onclick="escalateTicket('${ticket.id}')" ${ticket.status === 'escalated' ? 'disabled' : ''}>
-        ${ticket.status === 'escalated' ? 'Escalated' : '↑ Escalate'}
+      <button class="btn-escalate" onclick="escalateTicket('${ticket.id}')" ${ticket.status === 'escalated' || isClosed ? 'disabled' : ''}>
+        ${ticket.status === 'escalated' ? 'Flagged' : '⚑ Flag'}
+      </button>
+      <!-- La única salida que no gasta un envío. Hasta hoy el único botón que
+           movía un ticket mandaba correo, y el presupuesto de Resend son 100 al
+           día repartidos entre los tres builds. -->
+      <button class="btn-close-noreply" onclick="openCloseMenu('${ticket.id}')" ${isClosed ? 'disabled' : ''}>
+        ${ticket.status === 'closed' ? 'Closed' : 'Close, no reply'}
       </button>
     </div>`;
 
@@ -668,6 +955,88 @@ async function escalateTicket(id) {
   }
 }
 
+// ── SAVED REPLIES ─────────────────────────────────────────────────────────────
+// Reemplaza el contenido de la caja, no lo concatena: son respuestas completas,
+// no fragmentos, y encadenar dos deja una firma en medio del texto. Si ya había
+// algo escrito se pide confirmación antes de pisarlo.
+function useTemplate(i) {
+  const tpl = TEMPLATES[i];
+  const ta  = document.getElementById('reply-ta');
+  if (!tpl || !ta) return;
+  if (ta.value.trim() && !confirm('Replace what is already in the reply box?')) return;
+
+  const ticket = tickets.find(t => t.id === selectedId);
+  const c = ticket ? (customers[ticket.customer_id] || {}) : {};
+  const firstName = (c.full_name || '').trim().split(' ')[0] || 'there';
+
+  ta.value = tpl.body.replace(/\{name\}/g, firstName);
+  ta.dispatchEvent(new Event('input'));
+  ta.focus();
+}
+
+// ── CLOSE WITHOUT REPLYING ────────────────────────────────────────────────────
+// Un estado terminal que no manda correo. Antes de existir, la única forma de
+// sacar spam o un duplicado de la cola era aprobarlo — es decir, escribirle al
+// remitente — o dejarlo ahí para siempre.
+function openCloseMenu(ticketId) {
+  // Sin esto dos pulsaciones apilan dos menús, y el de abajo queda abierto tras
+  // elegir en el de arriba.
+  closeCloseMenu();
+  const html = `
+    <div class="close-overlay" onclick="if(event.target===this) closeCloseMenu()">
+      <div class="close-card">
+        <div class="close-title">Close without replying</div>
+        <p class="close-sub">No email is sent. The reason is saved as an internal note.</p>
+        ${CLOSE_REASONS.map(r =>
+          `<button class="close-reason" onclick="closeTicket('${ticketId}', this.dataset.reason)" data-reason="${esc(r)}">${esc(r)}</button>`
+        ).join('')}
+        <button class="close-cancel" onclick="closeCloseMenu()">Cancel</button>
+      </div>
+    </div>`;
+  const host = document.createElement('div');
+  host.id = 'close-menu';
+  host.innerHTML = html;
+  document.body.appendChild(host);
+}
+
+function closeCloseMenu() {
+  document.getElementById('close-menu')?.remove();
+}
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') closeCloseMenu();
+});
+
+async function closeTicket(id, reason) {
+  closeCloseMenu();
+  try {
+    // La nota va primero: si el PATCH falla, queda un ticket abierto con una
+    // nota de más, que es recuperable. Al revés quedaría un ticket cerrado sin
+    // constancia de por qué, que no lo es.
+    await sb('bc_ticket_notes', {
+      method: 'POST',
+      prefer: 'return=minimal',
+      body: JSON.stringify({
+        ticket_id: id,
+        agent_id: currentAgent?.id || null,
+        note: 'Closed without replying — ' + reason,
+        note_type: 'Internal'
+      })
+    });
+    await sb(`bc_support_tickets?id=eq.${id}`, {
+      method: 'PATCH',
+      prefer: 'return=minimal',
+      body: JSON.stringify({ status: 'closed', updated_at: new Date().toISOString() })
+    });
+    showToast('Closed — no email sent', 'success');
+    await loadTickets();
+    const updated = tickets.find(t => t.id === id);
+    if (updated) renderDetail(updated);
+  } catch (e) {
+    showToast('Failed to close: ' + e.message, 'error');
+  }
+}
+
 // ── ADD NOTE ──────────────────────────────────────────────────────────────────
 async function addNote(ticketId) {
   const input = document.getElementById('note-input');
@@ -686,6 +1055,81 @@ async function addNote(ticketId) {
   } catch(e) {
     showToast('Failed to add note: ' + e.message, 'error');
   }
+}
+
+// ── ORDERS BLOCK ──────────────────────────────────────────────────────────────
+const money = (n) => '$' + Number(n || 0).toFixed(2);
+const SHIP_LABELS = { preparing: 'Preparing', shipped: 'Shipped', in_transit: 'In transit', delivered: 'Delivered' };
+
+function ordersHtml(list, citedNumber, failed) {
+  if (failed) {
+    return `<div class="block-empty" style="border-style:solid;border-color:#FCA5A5;color:#B91C1C;">
+      Could not load this customer's orders. This says nothing about whether they have any — try refreshing before telling them there is no order.
+    </div>`;
+  }
+  if (!list.length) {
+    return `<div class="block-empty">No orders on file for this customer.</div>`;
+  }
+  return `<div class="orders-block">` + list.map(o => {
+    const items = o.bc_order_items || [];
+    // `bc_shipments` viene como array por el embed; un pedido tiene un envío.
+    const ship  = (Array.isArray(o.bc_shipments) ? o.bc_shipments[0] : o.bc_shipments) || null;
+    const st    = ship?.status || 'preparing';
+    // El pedido que el mensaje menciona. `order_number` lo escribe Insert Ticket
+    // desde lo que la búsqueda encontró de verdad, no desde lo que dijo el modelo.
+    const cited = citedNumber && o.order_number === citedNumber;
+
+    const lines = items.map(i => `
+      <div class="order-line">
+        <span>${esc(i.product_name)} <span style="color:#9CA3AF;">× ${i.qty}</span></span>
+        <span>${money(i.unit_price * i.qty)}</span>
+      </div>`).join('');
+
+    const dateFmt = (d) => d ? new Date(d).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' }) : null;
+    const shipBits = [];
+    if (ship?.carrier) shipBits.push(esc(ship.carrier));
+    if (ship?.tracking_number) shipBits.push(`<code>${esc(ship.tracking_number)}</code>`);
+    if (st === 'delivered' && ship?.delivered_at) shipBits.push('delivered ' + dateFmt(ship.delivered_at));
+    else if (ship?.eta_date) shipBits.push('ETA ' + dateFmt(ship.eta_date + 'T00:00:00Z'));
+
+    return `<div class="order-card ${cited ? 'cited' : ''}">
+      <div class="order-head">
+        <span class="order-num">${esc(o.order_number)}</span>
+        ${cited ? '<span class="cited-tag">In this message</span>' : ''}
+        <span class="ship-pill s-${st}">${esc(SHIP_LABELS[st] || st)}</span>
+        <span class="order-when">${dateFmt(o.created_at)}</span>
+        <span class="order-total">${money(o.total)}</span>
+      </div>
+      ${lines}
+      ${o.status === 'cancelled' ? '<div class="order-ship" style="color:#B91C1C;font-weight:600;">This order was cancelled.</div>' : ''}
+      ${shipBits.length ? `<div class="order-ship">${shipBits.join(' · ')}<br>Ships to ${esc(o.ship_city || '')}, ${esc(o.ship_state || '')} ${esc(o.ship_postal_code || '')}</div>` : ''}
+    </div>`;
+  }).join('') + `</div>`;
+}
+
+// ── OTHER MESSAGES FROM THIS CUSTOMER ─────────────────────────────────────────
+// Se filtra `tickets`, que ya está cargado. Sin consultas nuevas y sin hilos:
+// solo 3 de 139 clientes han escrito más de una vez, y construir conversaciones
+// de verdad costaría tocar n8n y la base para ese puñado.
+function historyHtml(ticket) {
+  const others = tickets
+    .filter(t => t.customer_id === ticket.customer_id && t.id !== ticket.id)
+    .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  if (!others.length) return '';
+
+  return `
+    <div class="section-label">Also wrote ${others.length === 1 ? 'once before' : others.length + ' other times'}</div>
+    <div class="history-block">
+      ${others.map(t => `
+        <div class="history-item" onclick="selectTicket('${t.id}')">
+          <div class="history-top">
+            ${intentBadgeHtml(t.intent)}
+            ${statusBadgeHtml(t.status)}
+            <span class="history-when">${new Date(t.created_at).toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+          </div>
+          <div class="history-msg">${esc((t.raw_message || '').slice(0, 110))}${(t.raw_message || '').length > 110 ? '…' : ''}</div>
+        </div>`).join('')}
+    </div>`;
 }
 
 // ── HELPERS ───────────────────────────────────────────────────────────────────

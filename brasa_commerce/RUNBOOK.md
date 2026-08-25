@@ -167,6 +167,12 @@ where status = 'approved' order by created_at desc;
 and a retry that cannot distinguish a refused send from a delivered one would re-email customers. To
 send one deliberately, a human decides and does it by hand.
 
+Since 2026-08-25 the agent panel shows them without this query: they carry their own counter, read
+*Email not sent*, and their approve button is disabled with the reason on it. When one no longer
+matters, **Close, no reply** moves it to `closed` and files the reason as an internal note — the
+26 rows left by the 2026-08-07 quota exhaustion are cleared that way, by hand. Run the query above
+when you want the list outside the panel, or to count what is outstanding.
+
 If the message says `You can only send testing emails to your own email address` instead, the sender
 has regressed to Resend's sandbox — see `INCIDENTS.md` · *Every email failed and every record said it
 succeeded*. That is a real defect, not a quota.

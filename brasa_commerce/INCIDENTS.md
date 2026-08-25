@@ -270,4 +270,81 @@ outage and a batch of junk look identical in the run log.
 
 ---
 
-*Last verified 2026-08-08.*
+## 2026-08-25 · The agent panel rendered half of every ticket
+
+### Symptom
+
+Reported as "the agent can't do anything here — no buttons, nothing to write a reply in, nowhere to
+see the customer's orders."
+
+Opening any ticket rendered the header, the escalation banner and **Customer info**, and then
+stopped. The customer's message, the confidence block, the reply editor, the internal notes and the
+entire action bar were absent. The queue, the filters, the counters and the search all worked, so
+the panel looked alive.
+
+No console error. No failed request. `node --check` on the extracted script passed.
+
+### Diagnosis
+
+`renderDetail` builds the whole detail pane as one template literal. Inside it sat an HTML comment
+added the same day:
+
+```html
+<!-- Sin `|| 1`: la base mantiene este contador con un trigger desde 2026-08-07 … -->
+```
+
+The backticks around `|| 1` closed the template literal at **1 156 characters**, at exactly the point
+where the rendering stopped. Everything after that was never part of the string.
+
+What made it survive every check is that the result is still valid JavaScript. The parse reads as
+
+```js
+main.innerHTML = `…<!-- Sin ` || 1 `: la base mantiene …`
+```
+
+— a template literal, `||`, a number, and then another template literal. No syntax error, so no
+exception, so nothing in the console and nothing in a syntax check. The only place the damage is
+observable is the DOM.
+
+Introduced by `8ae117e` the same day, in the commit that removed a `|| 1` fallback from the ticket
+counter and documented the removal in a comment.
+
+### What was ruled out
+
+- **A stale deploy** — the deployed HTML matched the commit. This was checked first and it is what
+  delayed the diagnosis: *deployed equals committed* says nothing about whether the page works.
+- **Data and RLS** — tickets, customers and notes all loaded; the list rendered from the same array.
+- **Auth** — the session was valid; `bc_agent` resolved and the top bar showed the agent's name.
+- **The escalated-ticket lock** — suspected because `8ae117e` had touched it. The lock was correct;
+  the buttons it controls were simply never emitted.
+
+### Decision and trade-off
+
+The comment was kept and rewritten with straight quotes, plus an explicit warning in place that a
+backtick there truncates the pane. Deleting it was the easier fix and was rejected: the comment
+records why the counter has no fallback, which is the kind of thing that gets "helpfully" restored.
+
+**What was given up:** no automated guard was added. This repository has no test runner for the four
+front ends — the build is a `sed` — and inventing one to catch a single class of typo was not worth
+the surface. The check that found it is a throwaway harness, not committed: the page with the
+Supabase SDK and `sb()` replaced by fixtures, served locally and driven in a browser.
+
+**The real lesson is about verification, not about backticks.** A front end whose failure mode is
+*renders less HTML than intended* cannot be verified by diffing files or by checking syntax. It has
+to be rendered.
+
+### Resolution and confirmation
+
+After the fix, all four ticket states render complete: **6 974 – 7 892 characters** each, against
+1 337 before, every one carrying the orders block, the reply editor, the notes block and all three
+action buttons.
+
+The other five front ends in this repository were scanned for the same construction — a backtick
+inside an HTML comment — and none carry it.
+
+**Limit.** The panel was in this state from `8ae117e` until the fix on 2026-08-25. How much agent
+work was lost to it is not recoverable: nothing records a detail pane that failed to draw.
+
+---
+
+*Last verified 2026-08-25.*
