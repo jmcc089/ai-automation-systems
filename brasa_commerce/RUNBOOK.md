@@ -169,9 +169,12 @@ send one deliberately, a human decides and does it by hand.
 
 Since 2026-08-25 the agent panel shows them without this query: they carry their own counter, read
 *Email not sent*, and their approve button is disabled with the reason on it. When one no longer
-matters, **Close, no reply** moves it to `closed` and files the reason as an internal note — the
-26 rows left by the 2026-08-07 quota exhaustion are cleared that way, by hand. Run the query above
-when you want the list outside the panel, or to count what is outstanding.
+matters, **Close, no reply** moves it to `closed` and files the reason as a `Resolution` note.
+
+**The query returns nothing today.** The 26 rows left by the 2026-08-07 quota exhaustion were closed
+as one batch on 2026-08-25 — they were that day's assurance traffic, not customers — so a row coming
+back here now is new, and means a send failed since. Read the note on a `closed` ticket to see why it
+was closed; swap `'approved'` for `'closed'` above to list them.
 
 If the message says `You can only send testing emails to your own email address` instead, the sender
 has regressed to Resend's sandbox — see `INCIDENTS.md` · *Every email failed and every record said it

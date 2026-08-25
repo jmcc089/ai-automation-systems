@@ -279,7 +279,11 @@ on this field.
   the agent to discover it: the ticket reads *Email not sent*, has its own counter, and its approve
   button is disabled with the reason, instead of offering a button the backend would refuse. The
   agent's remaining moves are to reply out of band or to close it.
-- **Nothing reconciles `approved` tickets automatically.** The 26 left by the 2026-08-07 quota
-  exhaustion are cleared by hand, one `closed` at a time.
+- **Nothing reconciles `approved` tickets automatically.** A human clears them — one at a time in
+  the panel, or together when a single incident caused all of them. The 26 left by the 2026-08-07
+  quota exhaustion were closed as one batch on 2026-08-25. Each carries a `Resolution` note giving
+  the reason the send failed and stating that they were **reviewed as a batch, not answered
+  individually**; the notes are written with a null `agent_id`, because no agent read them one by
+  one and the record should not suggest otherwise. As of that date no ticket sits at `approved`.
 
 *Last verified 2026-08-25.*

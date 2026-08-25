@@ -1020,7 +1020,9 @@ async function closeTicket(id, reason) {
         ticket_id: id,
         agent_id: currentAgent?.id || null,
         note: 'Closed without replying — ' + reason,
-        note_type: 'Internal'
+        // 'Resolution', no 'Internal': cerrar un ticket es resolverlo, y así la
+        // nota de cierre se distingue de un comentario cualquiera al filtrar.
+        note_type: 'Resolution'
       })
     });
     await sb(`bc_support_tickets?id=eq.${id}`, {

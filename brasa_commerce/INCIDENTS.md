@@ -99,13 +99,24 @@ openly as an unproven claim for about seven hours rather than being quietly assu
 
 ### Follow-up
 
-The 26 tickets left at `approved` are still there. The quota has reset, so they are now sendable, but
-re-approving is refused by the idempotency guard — clearing them is a deliberate human action, by
-design. That is the cost of the decision above, and it is being paid rather than engineered around.
+The 26 tickets left at `approved` sat there for eighteen days. The quota reset made them sendable
+again, but re-approving is refused by the idempotency guard — clearing them is a deliberate human
+action, by design. That was the cost of the decision above, and it was paid rather than engineered
+around.
 
-**A backlog of 26 is also the argument for the thing that does not exist**: nothing alerts on it. The
-record answers "what happened"; no one is told to go and look. The query is in `RUNBOOK.md` and it is
-run by a human who already suspects something.
+**Closed 2026-08-25**, as one batch, once the panel had somewhere to put them: `status = 'closed'`
+with a `Resolution` note on each recording that the send failed under the exhausted quota and that
+they were reviewed as a batch, not answered. They were that day's assurance and load traffic — an
+explicit `ASSURANCE-04G` probe, four asking after the non-existent `BC-ZZZZZZZZ`, an emoji-only
+message, nine fired inside 75 seconds — so no customer was left unanswered by closing them. The notes
+carry a null `agent_id` on purpose: nobody read them individually.
+
+**Eighteen days is the finding, not the backlog.** Nothing alerted; nothing in the panel even counted
+them, and `approved` rendered green with a tick, which is why they went unnoticed for so long — see
+*The agent panel rendered half of every ticket*, below. The counter and the red *Email not sent*
+label exist now, but they still only work on someone who opens the panel. The record answers "what
+happened"; no one is told to go and look. The query is in `RUNBOOK.md` and it is run by a human who
+already suspects something.
 
 ---
 
