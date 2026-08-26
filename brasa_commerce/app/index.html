@@ -102,9 +102,11 @@
   .b-esc     { background: #FEF2F2; color: #DC2626; font-size: 9px; padding: 2px 6px; }
 
   /* Status badges.
-     `approved` era verde y con un ✓ hasta hoy. Es el estado de un ticket cuyo
-     correo nunca se marcó enviado — 26 de ellos quedaron así el 2026-08-07,
-     cuando se agotó la cuota de Resend. Pintarlo como éxito los escondía. */
+     `approved` era verde y con un ✓. Es el estado de un ticket cuyo correo nunca
+     se marcó enviado: 26 quedaron así el 2026-08-07 al agotarse la cuota de
+     Resend y nadie los vio en dieciocho días, porque pintarlo como éxito los
+     escondía. Se cerraron el 2026-08-25 y hoy no hay ninguno, que es
+     precisamente cuando conviene que el aviso siga puesto. */
   .b-draft    { background: #FFF7F4; color: var(--terra); border: 1px solid #FDDDD0; }
   .b-approved { background: #FEF2F2; color: #B91C1C; border: 1px solid #FCA5A5; }
   .b-escalated{ background: #FEF2F2; color: #DC2626; }
@@ -256,8 +258,9 @@
   .history-msg { font-size: 12.5px; color: #374151; line-height: 1.5; transition: color 0.15s; }
 
   /* ── SAVED REPLIES ──
-     19 de los 56 tickets en cola llegan sin borrador: las rutas
-     `model_unavailable` y `no_substance` lo dejan vacío a propósito. */
+     Las rutas `model_unavailable` y `no_substance` dejan el borrador vacío a
+     propósito, y esos tickets caen enteros sobre el agente. La razón está en
+     TEMPLATES. */
   .tpl-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
   .tpl-btn {
     padding: 4px 11px; border-radius: 99px; font-size: 11px; font-weight: 500;
@@ -495,9 +498,12 @@ const CLOSE_REASONS = [
   'No reply needed'
 ];
 
-// Respuestas guardadas. 19 de los 56 tickets en cola llegan sin borrador —
-// `model_unavailable` y `no_substance` lo dejan vacío a propósito para que
-// nada pueda auto-enviarse — y hasta ahora Jordan los escribía desde cero.
+// Respuestas guardadas. Un ticket puede llegar sin borrador: `model_unavailable`
+// y `no_substance` lo dejan vacío a propósito para que nada pueda auto-enviarse,
+// y hasta que existió esta barra el agente lo escribía desde cero. Eran 19 de los
+// 56 en cola cuando se midió, el 2026-08-25; la cola se recortó al día siguiente
+// y hoy los que quedan sí traen borrador, pero la ruta sigue ahí y volverá a
+// producirlos en cuanto el modelo falle.
 const TEMPLATES = [
   { label: 'Where is my order', body:
     "Hi {name},\n\nThanks for reaching out. I've looked up your order and it's on its way — you'll find the current status and the carrier tracking number in the confirmation email we sent you.\n\nIf anything looks off, just reply here and I'll sort it out.\n\nBest,\nJordan\nBrasa Commerce" },
@@ -1111,8 +1117,8 @@ function ordersHtml(list, citedNumber, failed) {
 
 // ── OTHER MESSAGES FROM THIS CUSTOMER ─────────────────────────────────────────
 // Se filtra `tickets`, que ya está cargado. Sin consultas nuevas y sin hilos:
-// solo 3 de 139 clientes han escrito más de una vez, y construir conversaciones
-// de verdad costaría tocar n8n y la base para ese puñado.
+// solo 3 clientes de 149 han escrito más de una vez (medido el 2026-08-26), y
+// construir conversaciones de verdad costaría tocar n8n y la base para ese puñado.
 function historyHtml(ticket) {
   const others = tickets
     .filter(t => t.customer_id === ticket.customer_id && t.id !== ticket.id)

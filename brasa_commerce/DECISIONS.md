@@ -244,9 +244,27 @@ A fifth value, `closed`, was added on 2026-08-25 for a ticket an agent resolved 
 — spam, a duplicate, something already handled by other means. It exists because the only terminal
 state was `sent`, and marking an unanswered ticket `sent` would assert a delivery that never
 happened, which is the one thing this section prohibits. Before it, the only way to clear junk from
-the queue was to reply to it. `closed` is written by the panel and by nothing else; `Claim Ticket`
-claims `status=in.(draft,escalated)`, so a closed ticket is outside the approval path without any
-change to the workflow.
+the queue was to reply to it. No n8n path writes `closed`; `Claim Ticket` claims
+`status=in.(draft,escalated)`, so a closed ticket is outside the approval path without any change to
+the workflow.
+
+**It is not only the panel that writes it.** Two bulk closures were run directly against the
+database, and the record should say so rather than let every `closed` row imply an agent pressed a
+button. Both carry a `Resolution` note explaining themselves and a **null `agent_id`**, which is how
+they are told apart from a real one — the panel always stamps the acting agent's id.
+
+| when | rows | what they were |
+|---|---|---|
+| 2026-08-25 | 26 | the `approved` backlog from the quota exhaustion, cleared once the panel could show it |
+| 2026-08-26 | 51 | the review queue trimmed to six representative tickets |
+
+The second is a curation decision about a portfolio build, not a support decision: the queue held the
+eval, adversarial and load traffic of the 2026-05 to 2026-08 passes, and a panel demonstrating agent
+work is not demonstrated by 57 probes. **Nothing was deleted and no message was altered** — the ADV09
+XSS payloads and the injection attempts keep their `raw_message` intact, per `ADVERSARIAL.md`. What
+stayed open is one `escalated` complaint, two tickets carrying a real `order_number`, the only
+`return_request`, a retrieval-grounded product question, and the prompt-injection attempt that §1's
+`injection_terms` signal caught.
 
 This applies to both paths that email a customer: `Insert Ticket` → `Mark Intake Sent` on the
 auto-send path, and `Claim Ticket` → `Mark Ticket Sent` on the approval path. A ticket sitting at
