@@ -1,6 +1,0 @@
-[
-  { "name": "Physiotherapy",      "assignable": true,  "prompt_hint": "pain, injury, mobility issues, rehabilitation, post-surgery recovery, back/neck/joint problems" },
-  { "name": "Sports Massage",     "assignable": true,  "prompt_hint": "muscle tension, athletic recovery, performance, sports-related soreness" },
-  { "name": "Clinical Nutrition", "assignable": true,  "prompt_hint": "diet, weight, digestive issues, eating habits, nutrition plans, metabolic concerns" },
-  { "name": "Unknown",            "assignable": false, "prompt_hint": "message does not clearly indicate a service, or could apply to multiple" }
-]
